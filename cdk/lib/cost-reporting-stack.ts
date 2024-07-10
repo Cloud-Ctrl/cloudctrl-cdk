@@ -2,13 +2,14 @@ import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cur from 'aws-cdk-lib/aws-cur';
-import * as ce from 'aws-cdk-lib/aws-ce';
 import {Construct} from 'constructs';
 
 export class AwsCostReportingStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // This is the CloudCtrl account ID - it is the account that will be consuming the reports
+    // Don't change this value otherwise CloudCtrl will not be able to access the reports
     const cloudCtrlAccountId = '058552127514';
     const prefix = 'aws-cost-reporting';
 
