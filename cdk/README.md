@@ -1,8 +1,10 @@
-# Welcome to your CDK TypeScript project
+# CloudCtrl setup for AWS using CDK
 
-This is a blank project for CDK development with TypeScript.
+This is a CDK project to configure AWS resources for CloudCtrl Cost Usage Reporting.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+This project creates the entire configuration required for "AWS Assume Role Credentials"
+
+https://docs.cloudctrl.com.au/Setup/AWS/
 
 ## Prerequisites
 
@@ -18,11 +20,13 @@ npx cdk bootstrap
 npx cdk deploy
 ```
 
-## Useful commands
+### Example output
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+![CDK Output](docs/cdk-output.png)
+
+### CloudCtrl Configuration
+
+To configure CloudCtrl use the outputs from the above command and enter them into the CloudCtrl AWS configuration using
+the "Assume Role" configuration mode.
+
+![CloudCtrl Configuration](docs/cloudctrl.png)
