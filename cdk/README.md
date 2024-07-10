@@ -4,6 +4,20 @@ This is a blank project for CDK development with TypeScript.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
+## Prerequisites
+
+* Node.js 20.x or later
+* AWS CLI
+* AWS CDK
+
+## Getting Started
+
+```bash
+npm install
+npx cdk bootstrap
+npx cdk deploy
+```
+
 ## Useful commands
 
 * `npm run build`   compile typescript to js
