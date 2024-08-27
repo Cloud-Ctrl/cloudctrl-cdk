@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  BillingReportsBucketName:
+    Type: String
+    Description: Name of the S3 bucket for billing reports
+    AllowedPattern: "^[a-zA-Z0-9.-]+$"
+    ConstraintDescription: "Bucket name must only contain alphanumeric characters, dots, and hyphens."
+
+  CloudCtrlPolicyName:
+    Type: String
+    Description: Name of the IAM managed policy for CloudCtrl access
+    Default: "aws-cost-reporting-cloudctrl"
+
+  CloudCtrlRoleName:
+    Type: String
+    Description: Name of the IAM role for CloudCtrl access
+    Default: "aws-cost-reporting-cloudctrl"
+
+Resources:
+  BillingReportsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BillingReportsBucketName
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+
+  GetPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BillingReportsBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt BillingReportsBucket.Arn
+            Principal:
+              Service: billingreports.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceArn: !Sub arn:aws:cur:${AWS::Region}:${AWS::AccountId}:definition/*
+                aws:SourceAccount: !Sub ${AWS::AccountId}
+
+  PutPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BillingReportsBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: s3:PutObject
+            Resource: !Sub ${BillingReportsBucket.Arn}/*
+            Principal:
+              Service: billingreports.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceArn: !Sub arn:aws:cur:${AWS::Region}:${AWS::AccountId}:definition/*
+                aws:SourceAccount: !Sub ${AWS::AccountId}
+
+  CloudCtrlPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Ref CloudCtrlPolicyName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:GetObjectAttributes
+              - s3:GetBucketLocation
+            Resource:
+              - !GetAtt BillingReportsBucket.Arn
+              - !Sub ${BillingReportsBucket.Arn}/*
+          - Effect: Allow
+            Action:
+              - ec2:DescribeInstances
+              - s3:ListAllMyBuckets
+              - compute-optimizer:GetEC2InstanceRecommendations
+              - compute-optimizer:GetEnrollmentStatus
+              - cloudwatch:GetMetricStatistics
+            Resource: "*"
+
+  CloudCtrlRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref CloudCtrlRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: "arn:aws:iam::058552127514:root"
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Sub ${AWS::AccountId}
+      ManagedPolicyArns:
+        - !Ref CloudCtrlPolicy
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt CloudCtrlRole.Arn
+    Description: The ARN of the IAM Role
+    Export:
+      Name: !Sub ${AWS::StackName}-RoleArn
+
+  ExternalAccountId:
+    Value: !Sub ${AWS::AccountId}
+    Description: The external account ID
+    Export:
+      Name: !Sub ${AWS::StackName}-ExternalAccountId
+
+  S3Region:
+    Value: !Ref "AWS::Region"
+    Description: The region of the S3 bucket
+    Export:
+      Name: !Sub ${AWS::StackName}-S3Region
+
+  S3BucketName:
+    Value: !Ref BillingReportsBucket
+    Description: The name of the S3 bucket
+    Export:
+      Name: !Sub ${AWS::StackName}-S3BucketName
